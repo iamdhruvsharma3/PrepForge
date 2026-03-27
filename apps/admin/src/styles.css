@@ -1,0 +1,57 @@
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top right, rgba(95, 209, 255, 0.18), transparent 35%),
+    linear-gradient(180deg, #0d1325 0%, #151d35 100%);
+  color: var(--pf-color-text);
+  font-family:
+    "Satoshi",
+    "Segoe UI",
+    sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.admin-shell {
+  min-height: 100vh;
+  padding: 32px;
+}
+
+.admin-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 24px;
+}
+
+.eyebrow {
+  color: var(--pf-color-text-muted);
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  margin: 0 0 12px;
+  text-transform: uppercase;
+}
+
+.headline {
+  font-size: 48px;
+  line-height: 1.04;
+  margin: 0;
+  max-width: 720px;
+}
+
+.muted {
+  color: var(--pf-color-text-muted);
+}
+

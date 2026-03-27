@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum InterviewMode {
+  text
+  voice
+}
+
+enum InterviewStatus {
+  initialized
+  active
+  completed
+}
+
+enum WorkspaceRole {
+  owner
+  admin
+  member
+}
+
+model Workspace {
+  id                String            @id @default(cuid())
+  createdAt         DateTime          @default(now())
+  featureJson       Json?
+  interviews        Interview[]
+  members           WorkspaceMember[]
+  name              String
+  plan              String            @default("free")
+  slug              String            @unique
+  updatedAt         DateTime          @updatedAt
+  activeUsers       User[]            @relation("ActiveWorkspace")
+}
+
+model User {
+  id                String            @id
+  activeWorkspaceId String?
+  createdAt         DateTime          @default(now())
+  email             String            @unique
+  emailVerified     Boolean
+  image             String?
+  interviews        Interview[]
+  memberships       WorkspaceMember[]
+  name              String
+  accounts          Account[]
+  sessions          Session[]
+  updatedAt         DateTime          @updatedAt
+  activeWorkspace   Workspace?        @relation("ActiveWorkspace", fields: [activeWorkspaceId], references: [id], onDelete: SetNull)
+}
+
+model Interview {
+  id                String          @id @default(cuid())
+  company           String?
+  createdAt         DateTime        @default(now())
+  difficulty        String
+  firstQuestion     String
+  mode              InterviewMode
+  role              String
+  status            InterviewStatus @default(initialized)
+  userId            String
+  workspaceId       String
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace         Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model WorkspaceMember {
+  id          String        @id @default(cuid())
+  createdAt   DateTime      @default(now())
+  role        WorkspaceRole @default(member)
+  updatedAt   DateTime      @updatedAt
+  userId      String
+  workspaceId String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+}
+
+model Session {
+  id          String   @id
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+  ipAddress   String?
+  token       String   @unique
+  updatedAt   DateTime @updatedAt
+  userAgent   String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                    String    @id
+  accessToken           String?
+  accessTokenExpiresAt  DateTime?
+  accountId             String
+  createdAt             DateTime  @default(now())
+  idToken               String?
+  password              String?
+  providerId            String
+  refreshToken          String?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  tokenType             String?
+  updatedAt             DateTime  @updatedAt
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+}
+
+model Verification {
+  id         String   @id
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+  identifier String
+  updatedAt  DateTime @updatedAt
+  value      String
+}

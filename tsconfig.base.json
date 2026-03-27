@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "esModuleInterop": true,
+    "exactOptionalPropertyTypes": true,
+    "jsx": "react-jsx",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "noUncheckedIndexedAccess": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022",
+    "paths": {
+      "@prepforge/ai": ["packages/ai/src/index.ts"],
+      "@prepforge/ai/*": ["packages/ai/src/*"],
+      "@prepforge/api-client": ["packages/api-client/src/index.ts"],
+      "@prepforge/api-client/*": ["packages/api-client/src/*"],
+      "@prepforge/auth": ["packages/auth/src/index.ts"],
+      "@prepforge/auth/*": ["packages/auth/src/*"],
+      "@prepforge/config": ["packages/config/src/index.ts"],
+      "@prepforge/config/*": ["packages/config/src/*"],
+      "@prepforge/db": ["packages/db/src/index.ts"],
+      "@prepforge/db/*": ["packages/db/src/*"],
+      "@prepforge/tokens": ["packages/tokens/src/index.ts"],
+      "@prepforge/tokens/*": ["packages/tokens/src/*"],
+      "@prepforge/types": ["packages/types/src/index.ts"],
+      "@prepforge/types/*": ["packages/types/src/*"],
+      "@prepforge/ui": ["packages/ui/src/index.tsx"],
+      "@prepforge/ui/*": ["packages/ui/src/*"],
+      "@prepforge/utils": ["packages/utils/src/index.ts"],
+      "@prepforge/utils/*": ["packages/utils/src/*"]
+    }
+  }
+}
