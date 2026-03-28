@@ -8,6 +8,7 @@ import { auth } from "./lib/auth";
 import { createHealthRouter } from "./modules/health/controller/health.controller";
 import { createIdentityRouter } from "./modules/identity/controller/identity.controller";
 import { createInterviewsRouter } from "./modules/interviews/controller/interviews.controller";
+import { createProfilesRouter } from "./modules/profiles/controller/profiles.controller";
 import { createWorkspacesRouter } from "./modules/workspaces/controller/workspaces.controller";
 import { HttpError } from "./lib/http-error";
 
@@ -36,6 +37,7 @@ export function createApp() {
   app.use(`${apiEnv.API_BASE_PATH}/health`, createHealthRouter());
   app.use(`${apiEnv.API_BASE_PATH}/identity`, createIdentityRouter());
   app.use(`${apiEnv.API_BASE_PATH}/interviews`, createInterviewsRouter());
+  app.use(`${apiEnv.API_BASE_PATH}/profiles`, createProfilesRouter());
   app.use(`${apiEnv.API_BASE_PATH}/workspaces`, createWorkspacesRouter());
 
   app.use(

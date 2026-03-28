@@ -17,6 +17,13 @@ export const interviewDifficultySchema = z.enum(interviewDifficultyValues);
 export const interviewModeSchema = z.enum(interviewModeValues);
 export const interviewStatusSchema = z.enum(interviewStatusValues);
 
+export const interviewAxisScoreSchema = z.object({
+  communication: z.number().int().min(0).max(10),
+  correctness: z.number().int().min(0).max(10),
+  depth: z.number().int().min(0).max(10),
+  overall: z.number().int().min(0).max(10),
+});
+
 export const interviewConfigSchema = z.object({
   difficultyLevels: z.array(interviewDifficultySchema),
   focusAreas: z.array(z.string().min(2)),
@@ -52,6 +59,7 @@ export const interviewAnswerItemSchema = z.object({
   orderIndex: z.number().int().nonnegative(),
   prompt: z.string().min(8),
   response: z.string().min(4),
+  scores: interviewAxisScoreSchema,
 });
 
 export const interviewHistoryItemSchema = z.object({
@@ -61,6 +69,7 @@ export const interviewHistoryItemSchema = z.object({
   firstQuestion: z.string().min(8),
   id: z.string().min(2),
   mode: interviewModeSchema,
+  overallScore: z.number().int().min(0).max(10).nullable(),
   role: z.string().min(2).max(120),
   status: interviewStatusSchema,
   workspaceId: z.string().min(2),
@@ -82,7 +91,9 @@ export const interviewSessionDetailSchema = z.object({
   firstQuestion: z.string().min(8),
   id: z.string().min(2),
   mode: interviewModeSchema,
+  overallScore: z.number().int().min(0).max(10).nullable(),
   role: z.string().min(2).max(120),
+  scoreSummary: interviewAxisScoreSchema.nullable(),
   status: interviewStatusSchema,
   workspaceId: z.string().min(2),
   workspaceName: z.string().min(2).max(120),
@@ -90,6 +101,28 @@ export const interviewSessionDetailSchema = z.object({
 
 export const interviewSessionDetailResponseSchema = z.object({
   item: interviewSessionDetailSchema,
+});
+
+export const interviewDashboardSummarySchema = z.object({
+  activeSessions: z.number().int().nonnegative(),
+  averageOverallScore: z.number().int().min(0).max(10).nullable(),
+  completedSessions: z.number().int().nonnegative(),
+  latestCompletedScore: z.number().int().min(0).max(10).nullable(),
+  totalSessions: z.number().int().nonnegative(),
+});
+
+export const interviewDashboardTrendItemSchema = z.object({
+  createdAt: z.string().datetime(),
+  interviewId: z.string().min(2),
+  overallScore: z.number().int().min(0).max(10).nullable(),
+  role: z.string().min(2).max(120),
+  status: interviewStatusSchema,
+});
+
+export const interviewDashboardResponseSchema = z.object({
+  scoreAverages: interviewAxisScoreSchema.nullable(),
+  summary: interviewDashboardSummarySchema,
+  trend: z.array(interviewDashboardTrendItemSchema),
 });
 
 export const submitInterviewAnswerInputSchema = z.object({
@@ -104,6 +137,13 @@ export const submitInterviewAnswerResponseSchema =
 
 export type InterviewConfig = z.infer<typeof interviewConfigSchema>;
 export type InterviewAnswerItem = z.infer<typeof interviewAnswerItemSchema>;
+export type InterviewAxisScore = z.infer<typeof interviewAxisScoreSchema>;
+export type InterviewDashboardResponse = z.infer<
+  typeof interviewDashboardResponseSchema
+>;
+export type InterviewDashboardSummary = z.infer<
+  typeof interviewDashboardSummarySchema
+>;
 export type InterviewDifficulty = z.infer<typeof interviewDifficultySchema>;
 export type InterviewHistoryItem = z.infer<typeof interviewHistoryItemSchema>;
 export type InterviewHistoryResponse = z.infer<typeof interviewHistoryResponseSchema>;

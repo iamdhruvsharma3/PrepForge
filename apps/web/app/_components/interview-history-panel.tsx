@@ -77,7 +77,10 @@ export function InterviewHistoryPanel({
               </div>
 
               <div className="text-right text-sm text-slate-300">
-                <p>{item.status}</p>
+                <p>
+                  {item.status}
+                  {item.overallScore !== null ? ` • ${item.overallScore}/10` : ""}
+                </p>
                 <p>{formatTimestamp(item.createdAt)}</p>
               </div>
             </div>

@@ -1,5 +1,6 @@
 import type {
   InterviewConfig,
+  InterviewDashboardResponse,
   InterviewSessionDetailResponse,
   InterviewHistoryResponse,
   StartInterviewSessionInput,
@@ -8,6 +9,7 @@ import type {
 } from "@prepforge/types";
 import {
   interviewConfigSchema,
+  interviewDashboardResponseSchema,
   interviewHistoryResponseSchema,
   interviewSessionDetailResponseSchema,
   startInterviewSessionInputSchema,
@@ -22,6 +24,13 @@ export class InterviewsClient {
 
   getConfig(): Promise<InterviewConfig> {
     return this.httpClient.get("/interviews/config", interviewConfigSchema);
+  }
+
+  getDashboard(): Promise<InterviewDashboardResponse> {
+    return this.httpClient.get(
+      "/interviews/dashboard",
+      interviewDashboardResponseSchema,
+    );
   }
 
   getHistory(): Promise<InterviewHistoryResponse> {

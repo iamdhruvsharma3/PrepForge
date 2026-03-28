@@ -4,6 +4,7 @@ import {
 } from "@prepforge/ai";
 import type {
   InterviewConfig,
+  InterviewDashboardResponse,
   InterviewSessionDetailResponse,
   InterviewHistoryResponse,
   StartInterviewSessionInput,
@@ -12,6 +13,7 @@ import type {
 } from "@prepforge/types";
 
 import { HttpError } from "../../../lib/http-error";
+import { ProfilesRepository } from "../../profiles/repository/profiles.repository";
 import { InterviewsRepository } from "../repository/interviews.repository";
 
 const orchestrator = createInterviewOrchestrator(
@@ -19,7 +21,10 @@ const orchestrator = createInterviewOrchestrator(
 );
 
 export class InterviewsService {
-  constructor(private readonly repository = new InterviewsRepository()) {}
+  constructor(
+    private readonly repository = new InterviewsRepository(),
+    private readonly profilesRepository = new ProfilesRepository(),
+  ) {}
 
   getConfig(): InterviewConfig {
     return this.repository.getConfig();
@@ -32,7 +37,12 @@ export class InterviewsService {
       workspaceId: string;
     },
   ): Promise<StartInterviewSessionResponse> {
-    const blueprint = await orchestrator.buildSessionBlueprint(input);
+    const candidateProfile = await this.profilesRepository.getInterviewPersonalization(
+      tenantContext,
+    );
+    const blueprint = await orchestrator.buildSessionBlueprint(input, {
+      candidateProfile,
+    });
     const interview = await this.repository.createInterviewRecord({
       blueprint,
       input,
@@ -53,6 +63,13 @@ export class InterviewsService {
   }): Promise<InterviewHistoryResponse> {
     const items = await this.repository.listRecentHistory(tenantContext);
     return { items };
+  }
+
+  getDashboard(tenantContext: {
+    userId: string;
+    workspaceId: string;
+  }): Promise<InterviewDashboardResponse> {
+    return this.repository.getDashboard(tenantContext);
   }
 
   async getSessionDetail(
@@ -111,6 +128,7 @@ export class InterviewsService {
       interviewId,
       nextQuestion: review.nextQuestion,
       orderIndex: interview.answers.length,
+      scores: review.scores,
     });
 
     return {

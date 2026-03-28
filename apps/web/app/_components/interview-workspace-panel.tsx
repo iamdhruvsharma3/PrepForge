@@ -70,6 +70,14 @@ export function InterviewWorkspacePanel({
               {detail.currentQuestion ??
                 "This session has been completed. Review the saved answers below."}
             </p>
+            {detail.scoreSummary ? (
+              <div className="mt-4 flex flex-wrap gap-2 text-sm text-cyan-100">
+                <span>Overall {detail.scoreSummary.overall}/10</span>
+                <span>Correctness {detail.scoreSummary.correctness}/10</span>
+                <span>Communication {detail.scoreSummary.communication}/10</span>
+                <span>Depth {detail.scoreSummary.depth}/10</span>
+              </div>
+            ) : null}
           </div>
 
           <div>
@@ -133,6 +141,12 @@ export function InterviewWorkspacePanel({
                     Feedback
                   </p>
                   <p className="mt-2 text-sm leading-6 text-slate-200">{answer.feedback}</p>
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs text-cyan-100">
+                    <span>Overall {answer.scores.overall}/10</span>
+                    <span>Correctness {answer.scores.correctness}/10</span>
+                    <span>Communication {answer.scores.communication}/10</span>
+                    <span>Depth {answer.scores.depth}/10</span>
+                  </div>
                 </div>
 
                 {answer.nextQuestion ? (
@@ -153,4 +167,3 @@ export function InterviewWorkspacePanel({
     </Card>
   );
 }
-

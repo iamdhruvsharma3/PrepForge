@@ -25,6 +25,7 @@ enum WorkspaceRole {
 }
 
 model Workspace {
+  candidateProfiles CandidateProfile[]
   id                String            @id @default(cuid())
   createdAt         DateTime          @default(now())
   featureJson       Json?
@@ -38,6 +39,7 @@ model Workspace {
 }
 
 model User {
+  candidateProfiles CandidateProfile[]
   id                String            @id
   activeWorkspaceId String?
   createdAt         DateTime          @default(now())
@@ -51,6 +53,39 @@ model User {
   sessions          Session[]
   updatedAt         DateTime          @updatedAt
   activeWorkspace   Workspace?        @relation("ActiveWorkspace", fields: [activeWorkspaceId], references: [id], onDelete: SetNull)
+}
+
+model CandidateProfile {
+  id               String           @id @default(cuid())
+  createdAt        DateTime         @default(now())
+  currentCompany   String?
+  focusAreas       String[]
+  headline         String?
+  resumeDocuments  ResumeDocument[]
+  resumeHighlights String[]
+  strengths        String[]
+  summary          String?
+  targetRole       String?
+  updatedAt        DateTime         @updatedAt
+  userId           String
+  workspaceId      String
+  yearsExperience  Int?
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace        Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+}
+
+model ResumeDocument {
+  id                 String           @id @default(cuid())
+  candidateProfileId String
+  contentType        String?
+  createdAt          DateTime         @default(now())
+  fileName           String
+  rawText            String
+  source             String           @default("paste")
+  wordCount          Int
+  candidateProfile   CandidateProfile @relation(fields: [candidateProfileId], references: [id], onDelete: Cascade)
 }
 
 model Interview {
@@ -72,15 +107,18 @@ model Interview {
 }
 
 model InterviewAnswer {
-  id          String    @id @default(cuid())
-  createdAt   DateTime  @default(now())
-  feedback    String
-  interviewId String
-  nextQuestion String?
-  orderIndex  Int
-  prompt      String
-  response    String
-  interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  id                 String    @id @default(cuid())
+  communicationScore Int
+  correctnessScore   Int
+  createdAt          DateTime  @default(now())
+  depthScore         Int
+  feedback           String
+  interviewId        String
+  nextQuestion       String?
+  orderIndex         Int
+  prompt             String
+  response           String
+  interview          Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
 
   @@unique([interviewId, orderIndex])
 }

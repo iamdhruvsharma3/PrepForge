@@ -1,5 +1,6 @@
 export {
   completeInterviewSessionResponseSchema,
+  interviewDashboardResponseSchema,
   interviewConfigSchema,
   interviewHistoryResponseSchema,
   interviewSessionDetailResponseSchema,

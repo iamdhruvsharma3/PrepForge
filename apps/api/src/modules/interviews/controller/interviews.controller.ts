@@ -6,6 +6,7 @@ import {
 } from "../../../middleware/tenant-context.middleware";
 import {
   completeInterviewSessionResponseSchema,
+  interviewDashboardResponseSchema,
   interviewConfigSchema,
   interviewHistoryResponseSchema,
   interviewSessionDetailResponseSchema,
@@ -30,6 +31,15 @@ export function createInterviewsRouter() {
 
   router.get("/config", (_request, response) => {
     response.json(interviewConfigSchema.parse(service.getConfig()));
+  });
+
+  router.get("/dashboard", requireTenantContext, async (_request, response, next) => {
+    try {
+      const payload = await service.getDashboard(getTenantContext(response));
+      response.json(interviewDashboardResponseSchema.parse(payload));
+    } catch (error) {
+      next(error);
+    }
   });
 
   router.get("/history", requireTenantContext, async (_request, response, next) => {
