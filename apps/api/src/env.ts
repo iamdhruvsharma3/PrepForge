@@ -1,9 +1,23 @@
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
+
 import dotenv from "dotenv";
 import { parseEnv } from "@prepforge/config";
 import { environmentSchema } from "@prepforge/types";
 import { z } from "zod";
 
-dotenv.config({ path: ".env.local" });
+const envCandidates = [
+  resolve(process.cwd(), ".env.local"),
+  resolve(process.cwd(), "apps/api/.env.local"),
+  resolve(process.cwd(), ".env.local.example"),
+  resolve(process.cwd(), "apps/api/.env.local.example"),
+];
+
+for (const envPath of envCandidates) {
+  if (existsSync(envPath)) {
+    dotenv.config({ override: false, path: envPath });
+  }
+}
 
 const optionalSecretSchema = z.preprocess(
   (value) => (value === "" ? undefined : value),

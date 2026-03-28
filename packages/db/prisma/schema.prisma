@@ -54,18 +54,35 @@ model User {
 }
 
 model Interview {
-  id                String          @id @default(cuid())
+  id                String             @id @default(cuid())
+  answers           InterviewAnswer[]
   company           String?
-  createdAt         DateTime        @default(now())
+  completedAt       DateTime?
+  createdAt         DateTime           @default(now())
   difficulty        String
   firstQuestion     String
   mode              InterviewMode
   role              String
-  status            InterviewStatus @default(initialized)
+  status            InterviewStatus    @default(initialized)
+  updatedAt         DateTime           @updatedAt
   userId            String
   workspaceId       String
-  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  workspace         Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace         Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model InterviewAnswer {
+  id          String    @id @default(cuid())
+  createdAt   DateTime  @default(now())
+  feedback    String
+  interviewId String
+  nextQuestion String?
+  orderIndex  Int
+  prompt      String
+  response    String
+  interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@unique([interviewId, orderIndex])
 }
 
 model WorkspaceMember {

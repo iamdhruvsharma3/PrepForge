@@ -6,17 +6,21 @@ import { Button, Card } from "@prepforge/ui";
 type SessionContextCardProps = {
   context: AuthSessionContextResponse | null;
   contextError: string | null;
+  disabled?: boolean;
   onRefresh: () => Promise<void>;
   onSignOut: () => Promise<void>;
   onSwitchWorkspace: (workspaceId: string) => Promise<void>;
+  statusMessage?: string | null;
 };
 
 export function SessionContextCard({
   context,
   contextError,
+  disabled = false,
   onRefresh,
   onSignOut,
   onSwitchWorkspace,
+  statusMessage,
 }: SessionContextCardProps) {
   return (
     <Card className="rounded-[var(--pf-radius-lg)] border-cyan-400/20 bg-cyan-400/8 p-6">
@@ -36,14 +40,16 @@ export function SessionContextCard({
         </div>
 
         <div className="flex gap-2">
-          <Button onClick={() => void onRefresh()} variant="secondary">
+          <Button disabled={disabled} onClick={() => void onRefresh()} variant="secondary">
             Refresh
           </Button>
-          <Button onClick={() => void onSignOut()} variant="secondary">
+          <Button disabled={disabled} onClick={() => void onSignOut()} variant="secondary">
             Sign out
           </Button>
         </div>
       </div>
+
+      <p className="mt-4 min-h-6 text-sm text-slate-300">{statusMessage}</p>
 
       <div className="mt-6 grid gap-3">
         {context?.memberships.map((membership) => {
@@ -66,6 +72,7 @@ export function SessionContextCard({
               </div>
 
               <Button
+                disabled={disabled}
                 onClick={() => void onSwitchWorkspace(membership.workspace.id)}
                 variant={isActive ? "primary" : "secondary"}
               >
@@ -78,4 +85,3 @@ export function SessionContextCard({
     </Card>
   );
 }
-
