@@ -6,9 +6,12 @@ import type {
   AuthSessionContextResponse,
   CandidateProfile,
   IngestResumeInput,
+  InterviewConfig,
   InterviewDashboardResponse,
   InterviewHistoryItem,
   InterviewSessionDetail,
+  StartInterviewSessionInput,
+  UpsertCandidateProfileInput,
 } from "@prepforge/types";
 
 import { prepforgeApiClient } from "../../src/lib/api-client";
@@ -17,6 +20,7 @@ import { AuthForm } from "./auth-form";
 import { CandidateProfilePanel } from "./candidate-profile-panel";
 import { InterviewDashboardPanel } from "./interview-dashboard-panel";
 import { InterviewHistoryPanel } from "./interview-history-panel";
+import { InterviewLaunchPanel } from "./interview-launch-panel";
 import { InterviewWorkspacePanel } from "./interview-workspace-panel";
 import { SessionContextCard } from "./session-context-card";
 
@@ -41,6 +45,8 @@ export function AccessPanel() {
   const [context, setContext] = useState<AuthSessionContextResponse | null>(null);
   const [profile, setProfile] = useState<CandidateProfile | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
+  const [interviewConfig, setInterviewConfig] = useState<InterviewConfig | null>(null);
+  const [interviewConfigError, setInterviewConfigError] = useState<string | null>(null);
   const [dashboard, setDashboard] = useState<InterviewDashboardResponse | null>(null);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
   const [history, setHistory] = useState<InterviewHistoryItem[]>([]);
@@ -84,6 +90,17 @@ export function AccessPanel() {
     }
   }
 
+  async function loadInterviewConfig() {
+    try {
+      const payload = await prepforgeApiClient.interviews.getConfig();
+      setInterviewConfig(payload);
+      setInterviewConfigError(null);
+    } catch (error) {
+      setInterviewConfig(null);
+      setInterviewConfigError(getErrorMessage(error));
+    }
+  }
+
   async function loadDashboard() {
     try {
       const payload = await prepforgeApiClient.interviews.getDashboard();
@@ -114,6 +131,7 @@ export function AccessPanel() {
     await Promise.all([
       loadSessionContext(),
       loadProfile(),
+      loadInterviewConfig(),
       loadInterviewHistory(),
       loadDashboard(),
     ]);
@@ -126,6 +144,8 @@ export function AccessPanel() {
       setDashboardError(null);
       setProfile(null);
       setProfileError(null);
+      setInterviewConfig(null);
+      setInterviewConfigError(null);
       setHistory([]);
       setActiveSessionId(null);
       setActiveSession(null);
@@ -191,6 +211,8 @@ export function AccessPanel() {
       setDashboardError(null);
       setProfile(null);
       setProfileError(null);
+      setInterviewConfig(null);
+      setInterviewConfigError(null);
       setHistory([]);
       setActiveSessionId(null);
       setActiveSession(null);
@@ -232,28 +254,17 @@ export function AccessPanel() {
     }
   }
 
-  async function handleCreateDemoSession() {
+  async function handleLaunchSession(input: StartInterviewSessionInput) {
     setIsMutating(true);
     setStatusMessage(null);
 
     try {
-      const focusAreas =
-        profile && profile.focusAreas.length > 0
-          ? profile.focusAreas.slice(0, 2)
-          : ["system design", "behavioral storytelling"];
-
-      const payload = await prepforgeApiClient.interviews.startSession({
-        company: context?.activeWorkspace?.name,
-        difficulty: "intermediate",
-        focusAreas,
-        mode: "text",
-        role: profile?.targetRole ?? "Frontend Engineer",
-      });
+      const payload = await prepforgeApiClient.interviews.startSession(input);
 
       await Promise.all([loadInterviewHistory(), loadDashboard()]);
       await loadSessionDetail(payload.sessionId);
       setAnswerDraft("");
-      setStatusMessage(`Demo session created: ${payload.sessionId}`);
+      setStatusMessage(`Interview session created: ${payload.sessionId}`);
     } catch (error) {
       setStatusMessage(getErrorMessage(error));
     } finally {
@@ -337,6 +348,38 @@ export function AccessPanel() {
     }
   }
 
+  async function handleSaveProfile(input: UpsertCandidateProfileInput) {
+    setIsMutating(true);
+    setStatusMessage(null);
+
+    try {
+      const payload = await prepforgeApiClient.profiles.saveProfile(input);
+      setProfile(payload.item);
+      setProfileError(null);
+      setStatusMessage("Candidate profile saved.");
+    } catch (error) {
+      setStatusMessage(getErrorMessage(error));
+    } finally {
+      setIsMutating(false);
+    }
+  }
+
+  async function handleSetActiveResume(resumeId: string) {
+    setIsMutating(true);
+    setStatusMessage(null);
+
+    try {
+      const payload = await prepforgeApiClient.profiles.setActiveResume({ resumeId });
+      setProfile(payload.item);
+      setProfileError(null);
+      setStatusMessage(`Active resume set to version ${payload.item.resumeHistory.find((item) => item.id === resumeId)?.version ?? "selected"}.`);
+    } catch (error) {
+      setStatusMessage(getErrorMessage(error));
+    } finally {
+      setIsMutating(false);
+    }
+  }
+
   if (sessionState.data?.user) {
     return (
       <div className="grid gap-6">
@@ -354,6 +397,16 @@ export function AccessPanel() {
           error={profileError}
           onIngestResume={handleIngestResume}
           onRefresh={loadProfile}
+          onSetActiveResume={handleSetActiveResume}
+          onSaveProfile={handleSaveProfile}
+          profile={profile}
+        />
+        <InterviewLaunchPanel
+          companyName={context?.activeWorkspace?.name ?? null}
+          config={interviewConfig}
+          configError={interviewConfigError}
+          disabled={isMutating}
+          onLaunch={handleLaunchSession}
           profile={profile}
         />
         <InterviewDashboardPanel data={dashboard} error={dashboardError} />
@@ -362,7 +415,6 @@ export function AccessPanel() {
           disabled={isMutating}
           error={historyError}
           items={history}
-          onCreateDemoSession={handleCreateDemoSession}
           onRefresh={loadInterviewHistory}
           onSelectSession={handleSelectSession}
         />

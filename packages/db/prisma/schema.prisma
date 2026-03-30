@@ -24,6 +24,12 @@ enum WorkspaceRole {
   member
 }
 
+enum ResumeParseStatus {
+  completed
+  needs_review
+  failed
+}
+
 model Workspace {
   candidateProfiles CandidateProfile[]
   id                String            @id @default(cuid())
@@ -56,12 +62,14 @@ model User {
 }
 
 model CandidateProfile {
+  activeResumeDocument    ResumeDocument?  @relation("ActiveResumeDocument", fields: [activeResumeDocumentId], references: [id], onDelete: SetNull)
+  activeResumeDocumentId  String?
   id               String           @id @default(cuid())
   createdAt        DateTime         @default(now())
   currentCompany   String?
   focusAreas       String[]
   headline         String?
-  resumeDocuments  ResumeDocument[]
+  resumeDocuments  ResumeDocument[] @relation("ProfileResumeDocuments")
   resumeHighlights String[]
   strengths        String[]
   summary          String?
@@ -77,15 +85,25 @@ model CandidateProfile {
 }
 
 model ResumeDocument {
-  id                 String           @id @default(cuid())
+  activeForProfiles  CandidateProfile[] @relation("ActiveResumeDocument")
+  id                 String             @id @default(cuid())
   candidateProfileId String
   contentType        String?
-  createdAt          DateTime         @default(now())
+  createdAt          DateTime           @default(now())
   fileName           String
+  parseConfidence    Int?
+  parserName         String             @default("prepforge-resume-parser")
+  parserVersion      String             @default("0.1.0")
+  parseStatus        ResumeParseStatus  @default(completed)
+  parseWarnings      String[]
   rawText            String
-  source             String           @default("paste")
+  sizeBytes          Int?
+  source             String             @default("paste")
+  version            Int
   wordCount          Int
-  candidateProfile   CandidateProfile @relation(fields: [candidateProfileId], references: [id], onDelete: Cascade)
+  candidateProfile   CandidateProfile   @relation("ProfileResumeDocuments", fields: [candidateProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([candidateProfileId, version])
 }
 
 model Interview {

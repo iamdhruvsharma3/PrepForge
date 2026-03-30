@@ -8,7 +8,6 @@ type InterviewHistoryPanelProps = {
   disabled?: boolean;
   error: string | null;
   items: InterviewHistoryItem[];
-  onCreateDemoSession: () => Promise<void>;
   onRefresh: () => Promise<void>;
   onSelectSession: (interviewId: string) => Promise<void>;
 };
@@ -22,7 +21,6 @@ export function InterviewHistoryPanel({
   disabled = false,
   error,
   items,
-  onCreateDemoSession,
   onRefresh,
   onSelectSession,
 }: InterviewHistoryPanelProps) {
@@ -38,18 +36,13 @@ export function InterviewHistoryPanel({
           </h2>
           <p className="mt-2 text-sm leading-6 text-slate-300">
             {error ??
-              "Create a demo session to verify tenant-scoped persistence and history retrieval."}
+              "History stays tenant-scoped and reflects every launched interview session for the active workspace."}
           </p>
         </div>
 
-        <div className="flex gap-2">
-          <Button disabled={disabled} onClick={() => void onRefresh()} variant="secondary">
-            Refresh
-          </Button>
-          <Button disabled={disabled} onClick={() => void onCreateDemoSession()}>
-            Create demo session
-          </Button>
-        </div>
+        <Button disabled={disabled} onClick={() => void onRefresh()} variant="secondary">
+          Refresh
+        </Button>
       </div>
 
       <div className="mt-6 grid gap-3">

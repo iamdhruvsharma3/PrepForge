@@ -1,7 +1,11 @@
 import type {
   CandidateProfileContext,
   IngestResumeInput,
+  ResumeParseStatus,
 } from "@prepforge/types";
+
+const parserName = "prepforge-resume-parser";
+const parserVersion = "0.2.0";
 
 const strengthMatchers = [
   { label: "React", pattern: /\breact(?:\.js)?\b/i },
@@ -71,7 +75,7 @@ const rolePatterns = [
 ] as const;
 
 export class CandidateProfileOrchestrator {
-  ingestResume(input: IngestResumeInput): CandidateProfileContext {
+  parseResume(input: IngestResumeInput): ResumeParseResult {
     const normalizedText = normalizeText(input.resumeText);
     const lines = normalizedText
       .split("\n")
@@ -83,8 +87,7 @@ export class CandidateProfileOrchestrator {
     const strengths = extractMatches(normalizedText, strengthMatchers, 6);
     const focusAreas = extractMatches(normalizedText, focusAreaMatchers, 5);
     const resumeHighlights = extractResumeHighlights(lines);
-
-    return {
+    const profile = {
       currentCompany: extractCurrentCompany(lines),
       focusAreas,
       headline,
@@ -93,6 +96,19 @@ export class CandidateProfileOrchestrator {
       summary: extractSummary(normalizedText, resumeHighlights),
       targetRole,
       yearsExperience: extractYearsExperience(normalizedText),
+    } satisfies CandidateProfileContext;
+    const warnings = buildWarnings(profile, input);
+    const confidence = calculateConfidence(profile, warnings);
+
+    return {
+      metadata: {
+        confidence,
+        parserName,
+        parserVersion,
+        status: resolveParseStatus(confidence, warnings),
+        warnings,
+      },
+      profile,
     };
   }
 }
@@ -100,6 +116,17 @@ export class CandidateProfileOrchestrator {
 export function createCandidateProfileOrchestrator() {
   return new CandidateProfileOrchestrator();
 }
+
+export type ResumeParseResult = {
+  metadata: {
+    confidence: number | null;
+    parserName: string;
+    parserVersion: string;
+    status: ResumeParseStatus;
+    warnings: string[];
+  };
+  profile: CandidateProfileContext;
+};
 
 function normalizeText(value: string): string {
   return value.replace(/\r\n/g, "\n").replace(/\u2022/g, "-").trim();
@@ -219,4 +246,79 @@ function toTitleCase(value: string): string {
 
 function clampYears(value: number): number {
   return Math.max(0, Math.min(60, value));
+}
+
+function buildWarnings(
+  profile: CandidateProfileContext,
+  input: IngestResumeInput,
+): string[] {
+  const warnings: string[] = [];
+
+  if (!profile.targetRole) {
+    warnings.push("Target role was not confidently detected.");
+  }
+
+  if (!profile.summary) {
+    warnings.push("A strong professional summary could not be extracted.");
+  }
+
+  if (profile.focusAreas.length < 2) {
+    warnings.push("Interview focus areas are sparse and may need manual correction.");
+  }
+
+  if (profile.resumeHighlights.length < 2) {
+    warnings.push("Resume highlights are limited. Review the extracted profile before use.");
+  }
+
+  if (input.resumeText.length < 220) {
+    warnings.push("Resume text is short and may reduce parsing quality.");
+  }
+
+  return warnings.slice(0, 6);
+}
+
+function calculateConfidence(
+  profile: CandidateProfileContext,
+  warnings: string[],
+): number | null {
+  let score = 35;
+
+  if (profile.targetRole) {
+    score += 15;
+  }
+
+  if (profile.headline) {
+    score += 10;
+  }
+
+  if (profile.summary) {
+    score += 15;
+  }
+
+  score += Math.min(profile.focusAreas.length * 4, 12);
+  score += Math.min(profile.strengths.length * 3, 12);
+  score += Math.min(profile.resumeHighlights.length * 3, 12);
+
+  if (profile.yearsExperience !== null) {
+    score += 6;
+  }
+
+  score -= warnings.length * 8;
+
+  return Math.max(0, Math.min(100, score));
+}
+
+function resolveParseStatus(
+  confidence: number | null,
+  warnings: string[],
+): ResumeParseStatus {
+  if (confidence === null || confidence < 40) {
+    return "failed";
+  }
+
+  if (confidence < 72 || warnings.length > 0) {
+    return "needs_review";
+  }
+
+  return "completed";
 }
